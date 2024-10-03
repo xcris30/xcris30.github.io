@@ -1,0 +1,332 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Trivia Tongue</title>
+    <style>
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background-image: url('Arbol.jpeg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            width: 90%;
+            max-width: 800px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .menu {
+            margin: 20px 0;
+        }
+        .btn {
+            margin: 5px;
+            padding: 15px 30px;
+            font-size: 20px;
+            cursor: pointer;
+            background-color: #ff9800;
+            border: none;
+            color: white;
+            border-radius: 10px;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        .btn:hover {
+            background-color: #fb8c00;
+            transform: scale(1.05);
+        }
+        #level-title {
+            text-shadow: 2px 2px 4px black;
+            font-size: 32px;
+            margin-bottom: 20px;
+        }
+        #question-text {
+            text-shadow: 2px 2px 4px black;
+            font-size: 24px;
+            margin: 20px 0;
+        }
+        #question-container, #results-container, #instructions-container {
+            display: none;
+        }
+        .options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        .option-btn {
+            background-color: white;
+            border: none;
+            border-radius: 10px;
+            padding: 20px;
+            font-size: 18px;
+            color: black;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            height: auto;
+            min-height: 60px;
+            word-wrap: break-word;
+        }
+        .option-btn:hover {
+            background-color: #f0f0f0;
+            transform: scale(1.05);
+        }
+        .correct {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .incorrect {
+            background-color: #F44336;
+            color: white;
+        }
+        #instructions {
+            background-color: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+        }
+        h1 {
+            font-size: 48px;
+            text-shadow: 3px 3px 5px black;
+            margin: 20px 0;
+        }
+        footer {
+            margin-top: 20px;
+            font-style: italic;
+        }
+        .instructions-btn {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            width: 40px;
+            height: 40px;
+            font-size: 24px;
+            line-height: 40px;
+            text-align: center;
+            padding: 0;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+    <audio id="background-music" loop>
+        <source src="pou.mpeg" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+
+    <button class="btn instructions-btn" id="instructions-button">?</button>
+
+    <div class="container" id="start-container">
+        <h1>TRIVIA TONGUE</h1>
+        <div class="menu">
+            <button class="btn" id="start-button">Start Game</button>
+        </div>
+        <footer>
+            <p>Who among you knows the most? There’s only one way to find out! Take advantage of this game mode to show your knowledge.</p>
+        </footer>
+    </div>
+
+    <div class="container" id="instructions-container">
+        <h1>Instructions</h1>
+        <div id="instructions">
+            <p>1. Answer the questions presented at each level.</p>
+            <p>2. You can advance to the next level if you get at least 3 correct answers.</p>
+            <p>3. Your score will be displayed at the end of the game.</p>
+            <p>4. Click the "Restart Game" button to play again.</p>
+            <h2>Easy Level</h2>
+            <p>In this level, you must select the correct past form of the verbs in infinitive.</p>
+            <h2>Medium Level</h2>
+            <p>In this level, you must complete affirmative sentences using the negative past form of the verbs in infinitive.</p>
+            <h2>Hard Level</h2>
+            <p>In this level, you must complete sentences using comparative, superlative forms, and the specified verb tenses.</p>
+        </div>
+        <button class="btn" id="close-instructions-button">Close</button>
+    </div>
+
+    <div class="container" id="question-container">
+        <h1 id="level-title">Easy Level</h1>
+        <div id="question-text"></div>
+        <div class="options" id="options"></div>
+    </div>
+
+    <div class="container" id="results-container">
+        <h1>Results</h1>
+        <div id="results"></div>
+        <button class="btn" id="restart-button">Restart Game</button>
+    </div>
+
+    <script>
+        const questionsEasy = [
+            { question: "What is the past of 'play'?", options: ["playd", "plays", "playing", "played"], answer: 3 },
+            { question: "What is the past of 'go'?", options: ["goed", "went", "gone", "goes"], answer: 1 },
+            { question: "What is the past of 'watch'?", options: ["watched", "watchd", "watches", "watching"], answer: 0 },
+            { question: "What is the past of 'have'?", options: ["haved", "has", "had", "having"], answer: 2 },
+            { question: "What is the past of 'dance'?", options: ["danceed", "danced", "dances", "dancing"], answer: 1 }
+        ];
+
+        const questionsMedium = [
+            { question: "I __ (go) to the gym last week.", options: ["didn't went", "didn't go", "don't go", "doesn't go"], answer: 1 },
+            { question: "She __ (see) the movie last night.", options: ["didn't saw", "doesn't see", "didn't see", "didn't seen"], answer: 2 },
+            { question: "They __ (eat) breakfast before leaving for work.", options: ["didn't eat", "don't ate", "didn't eaten", "didn't eats"], answer: 0 },
+            { question: "He __ (take) the wrong bus yesterday.", options: ["didn't take", "doesn't took", "didn't taken", "didn't takes"], answer: 0 },
+            { question: "We __ (have) a chance to visit the museum last month.", options: ["didn't had", "didn't have", "doesn't have", "didn't haved"], answer: 1 }
+        ];
+
+        const questionsHard = [
+            { question: "My brother is __ (tall) than I am.", options: ["tall", "tallest", "taller", "more tall"], answer: 2 },
+            { question: "This is the __ (good) movie I've ever seen.", options: ["goodest", "best", "better", "good"], answer: 1 },
+            { question: "She __ (play) soccer every weekend.", options: ["plays", "play", "playing", "played"], answer: 0 },
+            { question: "They __ (go) to the park last Saturday.", options: ["goed", "went", "gone", "goes"], answer: 1 },
+            { question: "This book is __ (interesting) than the last one.", options: ["interesting", "interestinger", "more interesting", "most interesting"], answer: 2 }
+        ];
+
+        let currentQuestionIndex = 0;
+        let userAnswers = [];
+        let currentQuestions = questionsEasy;
+        let correctAnswersCount = 0;
+        let totalScore = { easy: 0, medium: 0, hard: 0 };
+        let currentContainer = 'start-container';
+
+        document.getElementById('start-button').addEventListener('click', function() {
+            document.getElementById('start-container').style.display = 'none';
+            document.getElementById('question-container').style.display = 'block';
+            currentContainer = 'question-container';
+            currentQuestionIndex = 0;
+            correctAnswersCount = 0;
+            showQuestion();
+            document.getElementById('background-music').play();
+        });
+
+        document.getElementById('instructions-button').addEventListener('click', function() {
+            document.getElementById(currentContainer).style.display = 'none';
+            document.getElementById('instructions-container').style.display = 'block';
+        });
+
+        document.getElementById('close-instructions-button').addEventListener('click', function() {
+            document.getElementById('instructions-container').style.display = 'none';
+            document.getElementById(currentContainer).style.display = 'block';
+        });
+
+        function showQuestion() {
+            const question = currentQuestions[currentQuestionIndex];
+            document.getElementById('level-title').textContent = currentQuestions === questionsEasy ? "Easy Level" :
+                                                                  currentQuestions === questionsMedium ? "Medium Level" :
+                                                                  "Hard Level";
+            document.getElementById('question-text').textContent = question.question;
+
+            const optionsDiv = document.getElementById('options');
+            optionsDiv.innerHTML = '';
+
+            question.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+
+                button.addEventListener('click', () => handleAnswer(index, button));
+
+                optionsDiv.appendChild(button);
+            });
+        }
+
+        function handleAnswer(selectedIndex, button) {
+            const question = currentQuestions[currentQuestionIndex];
+            userAnswers.push(selectedIndex === question.answer);
+            if (selectedIndex === question.answer) {
+                correctAnswersCount++;
+                button.classList.add('correct');
+            } else {
+                button.classList.add('incorrect');
+                const correctButton = document.querySelectorAll('.option-btn')[question.answer];
+                correctButton.classList.add('correct');
+            }
+
+            disableAllButtons();
+
+            setTimeout(() => {
+                currentQuestionIndex++;
+                if (currentQuestionIndex < currentQuestions.length) {
+                    showQuestion();
+                } else {
+                    handleLevelCompletion();
+                }
+            }, 1000);
+        }
+
+        function disableAllButtons() {
+            const buttons = document.querySelectorAll('.option-btn');
+            buttons.forEach(button => {
+                button.disabled = true;
+            });
+        }
+
+        function handleLevelCompletion() {
+            if (currentQuestions === questionsEasy) {
+                totalScore.easy = correctAnswersCount;
+                if (correctAnswersCount >= 3) {
+                    currentQuestions = questionsMedium;
+                    currentQuestionIndex = 0;
+                    correctAnswersCount = 0;
+                    setTimeout(showQuestion, 1000);
+                } else {
+                    alert("You need at least 3 correct answers to move to the next level.");
+                    showResults();
+                }
+            } else if (currentQuestions === questionsMedium) {
+                totalScore.medium = correctAnswersCount;
+                if (correctAnswersCount >= 3) {
+                    currentQuestions = questionsHard;
+                    currentQuestionIndex = 0;
+                    correctAnswersCount = 0;
+                    setTimeout(showQuestion, 1000);
+                } else {
+                    alert("You need at least 3 correct answers to move to the next level.");
+                    showResults();
+                }
+            } else {
+                totalScore.hard = correctAnswersCount;
+                showResults();
+            }
+        }
+
+        function showResults() {
+            document.getElementById('question-container').style.display = 'none';
+            document.getElementById('results-container').style.display = 'block';
+            currentContainer = 'results-container';
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = '';
+            resultsDiv.innerHTML += `<p>Score Easy Level: ${totalScore.easy}</p>`;
+            resultsDiv.innerHTML += `<p>Score Medium Level: ${totalScore.medium}</p>`;
+            resultsDiv.innerHTML += `<p>Score Hard Level: ${totalScore.hard}</p>`;
+            const totalScoreValue = totalScore.easy + totalScore.medium + totalScore.hard;
+            resultsDiv.innerHTML += `<p>Total Score: ${totalScoreValue}</p>`;
+        }
+
+        document.getElementById('restart-button').addEventListener('click', function() {
+            currentQuestionIndex = 0;
+            userAnswers = [];
+            currentQuestions = questionsEasy;
+            correctAnswersCount = 0;
+            totalScore = { easy: 0, medium: 0, hard: 0 };
+            document.getElementById('results-container').style.display = 'none';
+            document.getElementById('start-container').style.display = 'block';
+            currentContainer = 'start-container';
+            document.getElementById('background-music').pause();
+            document.getElementById('background-music').currentTime = 0;
+        });
+    </script>
+</body>
+</html>
